@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LANDING_NAV_ITEMS } from "@/constants";
+import { StreakBadge } from "@/components/shared/StreakBadge";
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -47,6 +48,7 @@ export function Navbar() {
           </div>
 
           <div className="hidden md:flex items-center gap-4">
+            <StreakBadge />
             <Link href="/login">
               <Button variant="ghost" size="sm">
                 Log in
