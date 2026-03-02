@@ -4,9 +4,13 @@ import { chat, analyzeStrategy, explainIndicator, generateMarketCommentary } fro
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { action, message, strategy, indicator, market } = body;
+    const { action, message, strategy, indicator, market, memoryContext } = body;
 
     let response: string;
+
+    const memorySection = memoryContext
+      ? `\n\nUser Context (from their trading history):\n${memoryContext}\n\nUse this context to provide personalized advice. Reference their past strategies and preferences when relevant.`
+      : "";
 
     switch (action) {
       case "analyze-strategy":
@@ -23,7 +27,7 @@ export async function POST(request: NextRequest) {
         response = await chat([
           {
             role: "system",
-            content: "You are EdgeFinder's trading strategy assistant. Help traders analyze strategies, understand indicators, and make data-driven decisions. Always include the disclaimer: For educational purposes only, not financial advice.",
+            content: `You are EdgeFinder's trading strategy assistant. Help traders analyze strategies, understand indicators, and make data-driven decisions. Always include the disclaimer: For educational purposes only, not financial advice.${memorySection}`,
           },
           { role: "user", content: message },
         ]);

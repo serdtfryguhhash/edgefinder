@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Trophy, Medal, Crown, Copy, Search } from "lucide-react";
+import { Trophy, Medal, Crown, Search, GitFork } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,15 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SAMPLE_LEADERBOARD } from "@/constants";
 import { formatPercent, getInitials, getRankBadgeColor } from "@/lib/utils";
+import { StrategyFork } from "@/components/features/strategy-fork";
+import { ShareCard } from "@/components/shared/ShareCard";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export default function LeaderboardPage() {
   const [timeFilter, setTimeFilter] = useState("all_time");
@@ -32,7 +41,7 @@ export default function LeaderboardPage() {
           Leaderboard
         </h1>
         <p className="text-muted-foreground">
-          Top-performing strategies ranked by risk-adjusted returns. Clone the best strategies from our community.
+          Top-performing strategies ranked by risk-adjusted returns. Fork the best strategies from our community.
         </p>
       </div>
 
@@ -70,10 +79,36 @@ export default function LeaderboardPage() {
                     <p className="text-[10px] text-muted-foreground">Sharpe</p>
                   </div>
                 </div>
-                <Button variant="outline" size="sm" className="w-full mt-4 text-xs">
-                  <Copy className="h-3 w-3 mr-1" />
-                  Clone Strategy
-                </Button>
+                <div className="flex items-center gap-2 mt-4">
+                  <StrategyFork
+                    strategyId={`leaderboard_${entry.rank}`}
+                    strategyName={entry.strategy_name}
+                    authorName={entry.author_name}
+                    forkCount={entry.clone_count}
+                    variant="button"
+                  />
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="ghost" size="sm" className="text-xs flex-1">
+                        Share
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[480px]">
+                      <DialogHeader>
+                        <DialogTitle>Share Performance</DialogTitle>
+                      </DialogHeader>
+                      <ShareCard
+                        strategyName={entry.strategy_name}
+                        returnPct={entry.total_return_pct}
+                        sharpeRatio={entry.sharpe_ratio}
+                        winRate={entry.win_rate}
+                        maxDrawdown={entry.max_drawdown_pct}
+                        timePeriod="All Time"
+                        authorName={entry.author_name}
+                      />
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -132,8 +167,10 @@ export default function LeaderboardPage() {
                   <th className="text-right py-3 px-4 text-xs text-muted-foreground font-medium">Win Rate</th>
                   <th className="text-right py-3 px-4 text-xs text-muted-foreground font-medium">Max DD</th>
                   <th className="text-right py-3 px-4 text-xs text-muted-foreground font-medium">Trades</th>
-                  <th className="text-right py-3 px-4 text-xs text-muted-foreground font-medium">Clones</th>
-                  <th className="py-3 px-4 w-20"></th>
+                  <th className="text-right py-3 px-4 text-xs text-muted-foreground font-medium">
+                    <GitFork className="h-3.5 w-3.5 inline" /> Forks
+                  </th>
+                  <th className="py-3 px-4 w-28"></th>
                 </tr>
               </thead>
               <tbody>
@@ -183,10 +220,13 @@ export default function LeaderboardPage() {
                       <span className="text-sm font-mono text-muted-foreground">{entry.clone_count}</span>
                     </td>
                     <td className="py-3 px-4">
-                      <Button variant="ghost" size="sm" className="text-xs h-7">
-                        <Copy className="h-3 w-3 mr-1" />
-                        Clone
-                      </Button>
+                      <StrategyFork
+                        strategyId={`leaderboard_${entry.rank}`}
+                        strategyName={entry.strategy_name}
+                        authorName={entry.author_name}
+                        forkCount={0}
+                        variant="button"
+                      />
                     </td>
                   </motion.tr>
                 ))}

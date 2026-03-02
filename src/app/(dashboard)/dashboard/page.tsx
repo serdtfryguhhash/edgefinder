@@ -24,6 +24,7 @@ import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { formatPercent, formatCurrency, formatNumber } from "@/lib/utils";
 import { SAMPLE_BACKTEST_RESULTS, SAMPLE_EQUITY_CURVE } from "@/constants";
+import { PerformanceDashboard } from "@/components/features/performance-dashboard";
 import {
   AreaChart,
   Area,
@@ -388,6 +389,9 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Performance Dashboard */}
+      <PerformanceDashboard />
 
       {/* Performance Metrics */}
       <Card className="glass-card">

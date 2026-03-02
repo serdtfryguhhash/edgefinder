@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -16,6 +16,11 @@ import {
   CreditCard,
   HelpCircle,
   Zap,
+  Sun,
+  BookOpen,
+  Bell,
+  Swords,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -28,12 +33,19 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { XPBar } from "@/components/shared/XPBar";
+import { StreakBadge } from "@/components/shared/StreakBadge";
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Strategies", href: "/strategies", icon: GitBranch },
   { label: "Indicators", href: "/indicators", icon: Activity },
   { label: "Leaderboard", href: "/leaderboard", icon: Trophy },
+  { label: "Briefing", href: "/briefing", icon: Sun },
+  { label: "Journal", href: "/journal", icon: BookOpen },
+  { label: "Alerts", href: "/alerts", icon: Bell },
+  { label: "Challenges", href: "/challenges", icon: Swords },
+  { label: "Reports", href: "/reports", icon: FileText },
   { label: "Referrals", href: "/referrals", icon: Users },
 ];
 
@@ -46,6 +58,20 @@ const bottomItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const [alertCount, setAlertCount] = useState(0);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("edgefinder_alerts");
+      if (stored) {
+        const alerts = JSON.parse(stored);
+        const triggered = alerts.filter((a: { triggered: boolean; enabled: boolean }) => a.triggered && a.enabled).length;
+        setAlertCount(triggered);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -86,7 +112,10 @@ export function Sidebar() {
           )}
         </button>
 
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto scrollbar-thin">
+        {/* XP Bar */}
+        <XPBar collapsed={collapsed} />
+
+        <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto scrollbar-thin">
           {navItems.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
             const content = (
@@ -105,6 +134,11 @@ export function Sidebar() {
                 {!collapsed && item.label === "Strategies" && (
                   <Badge variant="secondary" className="ml-auto text-[10px] px-1.5">
                     3
+                  </Badge>
+                )}
+                {!collapsed && item.label === "Alerts" && alertCount > 0 && (
+                  <Badge variant="destructive" className="ml-auto text-[10px] px-1.5">
+                    {alertCount}
                   </Badge>
                 )}
               </Link>
@@ -181,7 +215,10 @@ export function Sidebar() {
             </Avatar>
             {!collapsed && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">Marcus Chen</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium truncate">Marcus Chen</p>
+                  <StreakBadge />
+                </div>
                 <p className="text-xs text-muted-foreground truncate">Free Plan</p>
               </div>
             )}
