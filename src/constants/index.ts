@@ -143,6 +143,7 @@ export const NAV_ITEMS = [
 
 export const LANDING_NAV_ITEMS = [
   { label: "Features", href: "#features" },
+  { label: "Try Demo", href: "/demo" },
   { label: "Pricing", href: "/pricing" },
   { label: "Blog", href: "/blog" },
   { label: "Leaderboard", href: "/leaderboard" },
