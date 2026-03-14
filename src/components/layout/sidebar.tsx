@@ -21,6 +21,7 @@ import {
   Bell,
   Swords,
   FileText,
+  Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -35,11 +36,13 @@ import {
 } from "@/components/ui/tooltip";
 import { XPBar } from "@/components/shared/XPBar";
 import { StreakBadge } from "@/components/shared/StreakBadge";
+import { useAuth } from "@/contexts/auth-context";
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Strategies", href: "/strategies", icon: GitBranch },
   { label: "Indicators", href: "/indicators", icon: Activity },
+  { label: "Markets", href: "/markets", icon: Globe },
   { label: "Leaderboard", href: "/leaderboard", icon: Trophy },
   { label: "Briefing", href: "/briefing", icon: Sun },
   { label: "Journal", href: "/journal", icon: BookOpen },
@@ -59,6 +62,10 @@ export function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [alertCount, setAlertCount] = useState(0);
+  const { user, signOut } = useAuth();
+
+  const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
+  const userInitials = userName.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
 
   useEffect(() => {
     try {
@@ -211,19 +218,22 @@ export function Sidebar() {
         <div className="p-3">
           <div className="flex items-center gap-3 rounded-lg px-3 py-2">
             <Avatar className="h-8 w-8">
-              <AvatarFallback className="text-xs">MC</AvatarFallback>
+              <AvatarFallback className="text-xs">{userInitials}</AvatarFallback>
             </Avatar>
             {!collapsed && (
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium truncate">Marcus Chen</p>
+                  <p className="text-sm font-medium truncate">{userName}</p>
                   <StreakBadge />
                 </div>
                 <p className="text-xs text-muted-foreground truncate">Free Plan</p>
               </div>
             )}
             {!collapsed && (
-              <button className="text-muted-foreground hover:text-foreground transition-colors">
+              <button
+                onClick={signOut}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
                 <LogOut className="h-4 w-4" />
               </button>
             )}

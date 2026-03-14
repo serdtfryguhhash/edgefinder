@@ -1,5 +1,9 @@
 import Stripe from "stripe";
 
+export const isStripeConfigured =
+  !!process.env.STRIPE_SECRET_KEY &&
+  !process.env.STRIPE_SECRET_KEY.includes('placeholder');
+
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_placeholder", {
   apiVersion: "2023-10-16" as Stripe.LatestApiVersion,
   typescript: true,

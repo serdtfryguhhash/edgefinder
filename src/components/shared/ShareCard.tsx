@@ -63,7 +63,7 @@ export function ShareCard({
   <text x="460" y="175" font-family="Inter, sans-serif" font-size="11" fill="#94a3b8">MAX DD</text>
   <text x="460" y="200" font-family="JetBrains Mono, monospace" font-size="26" fill="#f59e0b" font-weight="700">${formatPercent(maxDrawdown)}</text>
   <rect x="32" y="230" width="536" height="1" fill="#1e293b"/>
-  <text x="32" y="270" font-family="Inter, sans-serif" font-size="11" fill="#64748b">Backtested on EdgeFinder — edgefinder.io</text>
+  <text x="32" y="270" font-family="Inter, sans-serif" font-size="11" fill="#64748b">Backtested on EdgeFinder - edgefinder.io</text>
   <text x="32" y="310" font-family="Inter, sans-serif" font-size="9" fill="#475569">For educational purposes only. Past performance does not guarantee future results.</text>
 </svg>`;
 
@@ -136,7 +136,7 @@ export function ShareCard({
 
         <div className="flex items-center justify-between">
           <p className="text-[10px] text-muted-foreground">
-            Backtested on EdgeFinder &mdash; edgefinder.io
+            Backtested on EdgeFinder - edgefinder.io
           </p>
           <p className="text-[9px] text-primary-600">
             For educational purposes only.

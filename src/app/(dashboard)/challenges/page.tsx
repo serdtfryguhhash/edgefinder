@@ -261,7 +261,7 @@ export default function ChallengesPage() {
           <CardHeader>
             <CardTitle className="text-base">Challenge Leaderboard</CardTitle>
             <CardDescription>
-              {activeChallenge?.title} — Top performers this month
+              {activeChallenge?.title} - Top performers this month
             </CardDescription>
           </CardHeader>
           <CardContent>

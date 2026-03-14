@@ -3,12 +3,14 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Activity, Mail, ArrowRight, Loader2, Check } from "lucide-react";
+import { Activity, Mail, ArrowRight, Loader2, Check, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { signUpWithEmail, signInWithGoogle, isSupabaseConfigured } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
 const BENEFITS = [
   "3 free strategies with full backtesting",
@@ -19,12 +21,30 @@ const BENEFITS = [
 ];
 
 export default function SignupPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [referralCode, setReferralCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const handleGoogleSignUp = async () => {
+    setError("");
+    setLoading(true);
+    const { error } = await signInWithGoogle();
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+    } else if (!isSupabaseConfigured) {
+      // Demo mode: Google returns immediately, redirect to dashboard
+      router.push("/dashboard");
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,8 +63,53 @@ export default function SignupPage() {
       return;
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setSent(true);
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
+      setLoading(false);
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const { data, error: signUpError } = await signUpWithEmail(email, password, name);
+
+      if (signUpError) {
+        setError(signUpError.message);
+        setLoading(false);
+        return;
+      }
+
+      if (data) {
+        // Log signup to Excel tracker
+        try {
+          await fetch("/api/signups", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, name, referralCode: referralCode || undefined }),
+          });
+        } catch (logError) {
+          // Don't block signup if logging fails
+          console.error("Failed to log signup:", logError);
+        }
+
+        if (!isSupabaseConfigured) {
+          // Demo mode: session is created instantly, go to dashboard
+          router.push("/dashboard");
+        } else {
+          // Real Supabase: show confirmation email notice
+          setSent(true);
+        }
+      }
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.");
+      console.error("Signup error:", err);
+    }
+
     setLoading(false);
   };
 
@@ -137,6 +202,7 @@ export default function SignupPage() {
                       variant="outline"
                       className="w-full mb-4 h-11"
                       disabled={loading}
+                      onClick={handleGoogleSignUp}
                     >
                       <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
                         <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
@@ -184,6 +250,52 @@ export default function SignupPage() {
                       </div>
 
                       <div className="space-y-2">
+                        <Label htmlFor="password">Password</Label>
+                        <div className="relative">
+                          <Input
+                            id="password"
+                            type={showPassword ? "text" : "password"}
+                            placeholder="Min. 8 characters"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            disabled={loading}
+                            className="h-11 pr-10"
+                            required
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="confirmPassword">Confirm password</Label>
+                        <div className="relative">
+                          <Input
+                            id="confirmPassword"
+                            type={showConfirmPassword ? "text" : "password"}
+                            placeholder="Re-enter your password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            disabled={loading}
+                            className="h-11 pr-10"
+                            required
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
                         <Label htmlFor="referral" className="text-muted-foreground">
                           Referral code (optional)
                         </Label>
@@ -206,7 +318,7 @@ export default function SignupPage() {
                         type="submit"
                         className="w-full h-11"
                         variant="glow"
-                        disabled={loading || !email || !name}
+                        disabled={loading || !email || !name || !password || !confirmPassword}
                       >
                         {loading ? (
                           <Loader2 className="h-4 w-4 animate-spin mr-2" />

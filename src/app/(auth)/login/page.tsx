@@ -2,19 +2,38 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Activity, Mail, ArrowRight, Loader2 } from "lucide-react";
+import { Activity, Mail, ArrowRight, Loader2, Lock, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { signInWithPassword, signInWithMagicLink, signInWithGoogle, isSupabaseConfigured } from "@/lib/supabase";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
+  const [mode, setMode] = useState<"password" | "magic-link">("password");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleGoogleSignIn = async () => {
+    setError("");
+    setLoading(true);
+    const { error } = await signInWithGoogle();
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+    } else if (!isSupabaseConfigured) {
+      // Demo mode: session created instantly, redirect
+      router.push("/dashboard");
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,9 +46,46 @@ export default function LoginPage() {
       return;
     }
 
-    // Simulate magic link send
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setSent(true);
+    try {
+      if (mode === "password") {
+        if (!password) {
+          setError("Please enter your password");
+          setLoading(false);
+          return;
+        }
+
+        const { data, error: signInError } = await signInWithPassword(email, password);
+
+        if (signInError) {
+          setError(signInError.message);
+          setLoading(false);
+          return;
+        }
+
+        if (data?.session) {
+          router.push("/dashboard");
+        }
+      } else {
+        const { error: magicLinkError } = await signInWithMagicLink(email);
+
+        if (magicLinkError) {
+          setError(magicLinkError.message);
+          setLoading(false);
+          return;
+        }
+
+        if (!isSupabaseConfigured) {
+          // Demo mode: session created instantly
+          router.push("/dashboard");
+        } else {
+          setSent(true);
+        }
+      }
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.");
+      console.error("Login error:", err);
+    }
+
     setLoading(false);
   };
 
@@ -96,7 +152,7 @@ export default function LoginPage() {
                 <Button
                   variant="outline"
                   className="w-full mb-4 h-11"
-                  onClick={() => {}}
+                  onClick={handleGoogleSignIn}
                   disabled={loading}
                 >
                   <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
@@ -127,6 +183,34 @@ export default function LoginPage() {
                   </span>
                 </div>
 
+                {/* Mode toggle */}
+                <div className="flex rounded-lg border border-white/10 p-1 mb-4">
+                  <button
+                    type="button"
+                    onClick={() => { setMode("password"); setError(""); }}
+                    className={`flex-1 flex items-center justify-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                      mode === "password"
+                        ? "bg-accent/10 text-accent"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Lock className="h-3 w-3" />
+                    Password
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setMode("magic-link"); setError(""); }}
+                    className={`flex-1 flex items-center justify-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                      mode === "magic-link"
+                        ? "bg-accent/10 text-accent"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Mail className="h-3 w-3" />
+                    Magic Link
+                  </button>
+                </div>
+
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email address</Label>
@@ -142,6 +226,39 @@ export default function LoginPage() {
                     />
                   </div>
 
+                  {mode === "password" && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="password">Password</Label>
+                        <Link
+                          href="/forgot-password"
+                          className="text-xs text-accent hover:underline"
+                        >
+                          Forgot password?
+                        </Link>
+                      </div>
+                      <div className="relative">
+                        <Input
+                          id="password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Enter your password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          disabled={loading}
+                          className="h-11 pr-10"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   {error && (
                     <p className="text-sm text-destructive">{error}</p>
                   )}
@@ -150,14 +267,16 @@ export default function LoginPage() {
                     type="submit"
                     className="w-full h-11"
                     variant="glow"
-                    disabled={loading || !email}
+                    disabled={loading || !email || (mode === "password" && !password)}
                   >
                     {loading ? (
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    ) : (
+                    ) : mode === "magic-link" ? (
                       <Mail className="h-4 w-4 mr-2" />
+                    ) : (
+                      <Lock className="h-4 w-4 mr-2" />
                     )}
-                    Send Magic Link
+                    {mode === "password" ? "Sign In" : "Send Magic Link"}
                     {!loading && <ArrowRight className="h-4 w-4 ml-2" />}
                   </Button>
                 </form>

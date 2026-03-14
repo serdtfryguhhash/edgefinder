@@ -1,33 +1,59 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Search, Activity, Lock, TrendingUp, BarChart3, Waves, Volume2, LineChart } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SAMPLE_INDICATORS, INDICATOR_CATEGORIES } from "@/constants";
-import { formatCompactNumber } from "@/lib/utils";
+import { ALL_INDICATORS, INDICATOR_CATEGORIES } from "@/constants";
+
+const STORAGE_KEY = "edgefinder_enabled_indicators";
 
 const categoryIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   trend: TrendingUp,
   momentum: Activity,
   volatility: Waves,
   volume: Volume2,
-  oscillator: BarChart3,
-  support_resistance: LineChart,
-  pattern: BarChart3,
   statistical: BarChart3,
-  custom: Activity,
 };
+
+function getStoredIndicators(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
+function storeIndicators(ids: string[]) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+}
 
 export default function IndicatorsPage() {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
+  const [enabledIndicators, setEnabledIndicators] = useState<string[]>([]);
 
-  const filtered = SAMPLE_INDICATORS.filter((ind) => {
+  useEffect(() => {
+    setEnabledIndicators(getStoredIndicators());
+  }, []);
+
+  const toggleIndicator = useCallback((id: string) => {
+    setEnabledIndicators((prev) => {
+      const next = prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id];
+      storeIndicators(next);
+      return next;
+    });
+  }, []);
+
+  const filtered = ALL_INDICATORS.filter((ind) => {
     const matchesSearch =
       ind.name.toLowerCase().includes(search.toLowerCase()) ||
       ind.short_name.toLowerCase().includes(search.toLowerCase());
@@ -37,16 +63,21 @@ export default function IndicatorsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Indicator Library</h1>
-        <p className="text-muted-foreground">
-          Browse and explore 200+ technical indicators across all categories.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Indicator Library</h1>
+          <p className="text-muted-foreground">
+            Browse and explore 106 technical indicators across all categories.
+          </p>
+        </div>
+        <Badge variant="secondary" className="text-sm px-3 py-1">
+          {ALL_INDICATORS.length} indicators, {enabledIndicators.length} enabled
+        </Badge>
       </div>
 
       {/* Category Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        {INDICATOR_CATEGORIES.filter((c) => c.value !== "custom").slice(0, 5).map((cat) => {
+        {INDICATOR_CATEGORIES.map((cat) => {
           const Icon = categoryIcons[cat.value] || Activity;
           return (
             <button
@@ -84,6 +115,7 @@ export default function IndicatorsPage() {
             <TabsTrigger value="momentum" className="text-xs">Momentum</TabsTrigger>
             <TabsTrigger value="volatility" className="text-xs">Volatility</TabsTrigger>
             <TabsTrigger value="volume" className="text-xs">Volume</TabsTrigger>
+            <TabsTrigger value="statistical" className="text-xs">Statistical</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
@@ -92,12 +124,13 @@ export default function IndicatorsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {filtered.map((indicator, index) => {
           const Icon = categoryIcons[indicator.category] || Activity;
+          const isEnabled = enabledIndicators.includes(indicator.id);
           return (
             <motion.div
               key={indicator.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2, delay: index * 0.03 }}
+              transition={{ duration: 0.2, delay: index * 0.02 }}
             >
               <Card className="glass-card-hover group cursor-pointer">
                 <CardContent className="p-5">
@@ -119,6 +152,11 @@ export default function IndicatorsPage() {
                         <p className="text-xs font-mono text-muted-foreground">{indicator.short_name}</p>
                       </div>
                     </div>
+                    <Switch
+                      checked={isEnabled}
+                      onCheckedChange={() => toggleIndicator(indicator.id)}
+                      disabled={indicator.is_premium && !isEnabled}
+                    />
                   </div>
 
                   <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
@@ -128,7 +166,7 @@ export default function IndicatorsPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Badge variant="outline" className="text-[10px] capitalize">
-                        {indicator.category.replace("_", " ")}
+                        {indicator.category}
                       </Badge>
                       {indicator.overlay && (
                         <Badge variant="secondary" className="text-[10px]">
@@ -137,7 +175,7 @@ export default function IndicatorsPage() {
                       )}
                     </div>
                     <span className="text-[10px] text-muted-foreground">
-                      {formatCompactNumber(indicator.usage_count)} uses
+                      {indicator.usage_count} uses
                     </span>
                   </div>
                 </CardContent>

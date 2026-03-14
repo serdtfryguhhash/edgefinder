@@ -63,11 +63,18 @@ export function Hero() {
           >
             <Link href="/signup">
               <Button size="xl" variant="glow" className="group">
-                Start Free — No Credit Card
+                Start Free - No Credit Card
                 <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
               </Button>
             </Link>
-            <Button size="xl" variant="outline" className="group">
+            <Button
+              size="xl"
+              variant="outline"
+              className="group"
+              onClick={() => {
+                document.getElementById("live-demo")?.scrollIntoView({ behavior: "smooth" });
+              }}
+            >
               <Play className="mr-2 h-5 w-5" />
               Watch Demo
             </Button>

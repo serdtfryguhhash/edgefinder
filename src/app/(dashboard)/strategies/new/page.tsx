@@ -24,7 +24,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { MARKETS, TIMEFRAMES, SAMPLE_INDICATORS } from "@/constants";
+import { MARKETS, TIMEFRAMES, ALL_INDICATORS } from "@/constants";
 
 export default function NewStrategyPage() {
   const [step, setStep] = useState(1);
@@ -259,7 +259,7 @@ export default function NewStrategyPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {SAMPLE_INDICATORS.map((indicator) => (
+                {ALL_INDICATORS.map((indicator) => (
                   <button
                     key={indicator.id}
                     onClick={() => toggleIndicator(indicator.id)}

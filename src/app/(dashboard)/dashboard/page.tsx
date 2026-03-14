@@ -23,17 +23,12 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { formatPercent, formatCurrency, formatNumber } from "@/lib/utils";
-import { SAMPLE_BACKTEST_RESULTS, SAMPLE_EQUITY_CURVE } from "@/constants";
+import { SAMPLE_BACKTEST_RESULTS } from "@/constants";
 import { PerformanceDashboard } from "@/components/features/performance-dashboard";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import { TradeSignals } from "@/components/features/trade-signals";
+import { LiveMarketData } from "@/components/features/live-market-data";
+import { TradingViewChart } from "@/components/charts/tradingview-chart";
+import { TradingViewTicker } from "@/components/charts/tradingview-ticker";
 
 const stats = [
   {
@@ -109,10 +104,11 @@ const recentActivity = [
 ];
 
 export default function DashboardPage() {
-  const equityData = SAMPLE_EQUITY_CURVE.filter((_, i) => i % 3 === 0);
-
   return (
     <div className="space-y-6">
+      {/* Live Market Ticker Bar */}
+      <TradingViewTicker />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -190,70 +186,7 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={equityData}>
-                  <defs>
-                    <linearGradient id="equityGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#22C55E" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#22C55E" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="benchmarkGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                  <XAxis
-                    dataKey="timestamp"
-                    stroke="#64748b"
-                    fontSize={10}
-                    tickFormatter={(val) => val.slice(5)}
-                  />
-                  <YAxis
-                    stroke="#64748b"
-                    fontSize={10}
-                    tickFormatter={(val) => `$${(val / 1000).toFixed(0)}K`}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#0f172a",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      borderRadius: "8px",
-                      fontSize: "12px",
-                    }}
-                    formatter={(value) => [`$${Number(value ?? 0).toLocaleString()}`, ""]}
-                    labelFormatter={(label) => `Date: ${label}`}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="benchmark"
-                    stroke="#3b82f6"
-                    fill="url(#benchmarkGradient)"
-                    strokeWidth={1.5}
-                    name="S&P 500"
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="equity"
-                    stroke="#22C55E"
-                    fill="url(#equityGradient)"
-                    strokeWidth={2}
-                    name="Portfolio"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="flex items-center gap-6 mt-4 text-xs">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-0.5 rounded bg-accent" />
-                <span className="text-muted-foreground">Portfolio (+24.8%)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-0.5 rounded bg-secondary-400" />
-                <span className="text-muted-foreground">S&P 500 (+12.4%)</span>
-              </div>
-            </div>
+            <TradingViewChart symbol="SPY" interval="D" height={350} />
           </CardContent>
         </Card>
 
@@ -285,6 +218,12 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Trade Signals */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <TradeSignals />
+        <LiveMarketData />
       </div>
 
       {/* Strategies & Quick Stats */}

@@ -1,13 +1,12 @@
 {
-  "name": "EdgeFinder - Trading Strategy Backtesting",
+  "name": "EdgeFinder - Trading Edge Discovery",
   "short_name": "EdgeFinder",
-  "description": "Build, backtest, and optimize trading strategies across stocks, forex, crypto, and futures.",
+  "description": "Build, backtest, and optimize trading strategies with 200+ indicators",
   "start_url": "/dashboard",
   "display": "standalone",
   "background_color": "#020617",
   "theme_color": "#020617",
   "orientation": "portrait-primary",
-  "categories": ["finance", "business", "productivity"],
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -21,5 +20,8 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "categories": ["finance", "business"],
+  "screenshots": [],
+  "prefer_related_applications": false
 }

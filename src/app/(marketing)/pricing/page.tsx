@@ -13,6 +13,29 @@ import { PRICING_PLANS } from "@/constants";
 
 export default function PricingPage() {
   const [annual, setAnnual] = useState(true);
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+
+  const handleCheckout = async (planId: string) => {
+    setLoadingPlan(planId);
+    try {
+      const response = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          planId,
+          billing: annual ? "annual" : "monthly",
+        }),
+      });
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      console.error("Checkout error:", error);
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
 
   return (
     <div className="py-20">
@@ -96,14 +119,25 @@ export default function PricingPage() {
                   )}
                 </CardHeader>
                 <CardContent>
-                  <Link href={plan.price_monthly === 0 ? "/signup" : "/signup"}>
+                  {plan.price_monthly === 0 ? (
+                    <Link href="/signup">
+                      <Button
+                        variant="outline"
+                        className="w-full mb-6"
+                      >
+                        {plan.cta}
+                      </Button>
+                    </Link>
+                  ) : (
                     <Button
                       variant={plan.highlighted ? "glow" : "outline"}
                       className="w-full mb-6"
+                      onClick={() => handleCheckout(plan.id)}
+                      disabled={loadingPlan === plan.id}
                     >
-                      {plan.cta}
+                      {loadingPlan === plan.id ? "Loading..." : plan.cta}
                     </Button>
-                  </Link>
+                  )}
 
                   <ul className="space-y-3">
                     {plan.features.map((feature) => (

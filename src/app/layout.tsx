@@ -16,7 +16,7 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "EdgeFinder — Discover Your Trading Edge",
+    default: "EdgeFinder - Discover Your Trading Edge",
     template: "%s | EdgeFinder",
   },
   description:
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: "https://edgefinder.io",
-    title: "EdgeFinder — Discover Your Trading Edge",
+    title: "EdgeFinder - Discover Your Trading Edge",
     description:
       "Build, backtest, and optimize trading strategies across stocks, forex, crypto, and futures.",
     siteName: "EdgeFinder",
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "EdgeFinder — Discover Your Trading Edge",
+    title: "EdgeFinder - Discover Your Trading Edge",
     description:
       "Build, backtest, and optimize trading strategies across stocks, forex, crypto, and futures.",
     images: ["/og-image.png"],
@@ -73,6 +73,11 @@ export const metadata: Metadata = {
     },
   },
   manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "EdgeFinder",
+  },
   icons: {
     icon: "/favicon.ico",
     shortcut: "/favicon-16x16.png",
@@ -97,6 +102,21 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} font-sans min-h-screen bg-background text-foreground antialiased`}
       >
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').then(function(reg) {
+                    console.log('EdgeFinder SW registered:', reg.scope);
+                  }).catch(function(err) {
+                    console.log('EdgeFinder SW registration failed:', err);
+                  });
+                });
+              }
+            `,
+          }}
+        />
         {children}
       </body>
     </html>

@@ -203,11 +203,7 @@ export type IndicatorCategory =
   | "momentum"
   | "volatility"
   | "volume"
-  | "oscillator"
-  | "support_resistance"
-  | "pattern"
-  | "statistical"
-  | "custom";
+  | "statistical";
 
 export interface IndicatorParameter {
   name: string;
@@ -281,7 +277,7 @@ export interface NewsletterSubscriber {
   created_at: string;
 }
 
-export type Market = "stocks" | "forex" | "crypto" | "futures" | "options";
+export type Market = "stocks" | "forex" | "crypto" | "futures" | "options" | "metals";
 export type Timeframe = "1m" | "5m" | "15m" | "1h" | "4h" | "1d" | "1w" | "1M";
 
 export interface LeaderboardEntry {

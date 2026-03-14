@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { SAMPLE_INDICATORS } from "@/constants";
+import { ALL_INDICATORS } from "@/constants";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
   const page = parseInt(searchParams.get("page") || "1");
   const perPage = parseInt(searchParams.get("per_page") || "50");
 
-  let indicators = [...SAMPLE_INDICATORS];
+  let indicators = [...ALL_INDICATORS];
 
   if (category && category !== "all") {
     indicators = indicators.filter((i) => i.category === category);

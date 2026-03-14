@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Trophy, Medal, Crown, Search, GitFork } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { SAMPLE_LEADERBOARD } from "@/constants";
+import { getLeaderboard, updateCloneCount, type LeaderboardEntry } from "@/lib/leaderboard-store";
 import { formatPercent, getInitials, getRankBadgeColor } from "@/lib/utils";
 import { StrategyFork } from "@/components/features/strategy-fork";
 import { ShareCard } from "@/components/shared/ShareCard";
@@ -25,10 +25,20 @@ export default function LeaderboardPage() {
   const [timeFilter, setTimeFilter] = useState("all_time");
   const [marketFilter, setMarketFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
 
-  const filtered = SAMPLE_LEADERBOARD.filter((entry) => {
-    const matchesSearch = entry.strategy_name.toLowerCase().includes(search.toLowerCase()) ||
-      entry.author_name.toLowerCase().includes(search.toLowerCase());
+  useEffect(() => {
+    setLeaderboardData(getLeaderboard());
+  }, []);
+
+  const handleClone = (strategyName: string) => {
+    const updated = updateCloneCount(strategyName);
+    setLeaderboardData(updated);
+  };
+
+  const filtered = leaderboardData.filter((entry) => {
+    const matchesSearch = entry.strategy.toLowerCase().includes(search.toLowerCase()) ||
+      entry.author.toLowerCase().includes(search.toLowerCase());
     const matchesMarket = marketFilter === "all" || entry.market === marketFilter;
     return matchesSearch && matchesMarket;
   });
@@ -47,7 +57,7 @@ export default function LeaderboardPage() {
 
       {/* Top 3 Podium */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {SAMPLE_LEADERBOARD.slice(0, 3).map((entry, index) => (
+        {leaderboardData.slice(0, 3).map((entry, index) => (
           <motion.div
             key={entry.rank}
             initial={{ opacity: 0, y: 20 }}
@@ -65,26 +75,26 @@ export default function LeaderboardPage() {
                   )}
                 </div>
                 <Avatar className="h-12 w-12 mx-auto mb-2">
-                  <AvatarFallback className="text-sm">{getInitials(entry.author_name)}</AvatarFallback>
+                  <AvatarFallback className="text-sm">{getInitials(entry.author)}</AvatarFallback>
                 </Avatar>
-                <p className="font-semibold text-sm">{entry.strategy_name}</p>
-                <p className="text-xs text-muted-foreground mb-3">by {entry.author_name}</p>
+                <p className="font-semibold text-sm">{entry.strategy}</p>
+                <p className="text-xs text-muted-foreground mb-3">by {entry.author}</p>
                 <div className="grid grid-cols-2 gap-2 text-center">
                   <div>
-                    <p className="text-lg font-bold data-text text-accent">{formatPercent(entry.total_return_pct)}</p>
+                    <p className="text-lg font-bold data-text text-accent">{formatPercent(entry.totalReturn)}</p>
                     <p className="text-[10px] text-muted-foreground">Return</p>
                   </div>
                   <div>
-                    <p className="text-lg font-bold data-text text-secondary-400">{entry.sharpe_ratio.toFixed(2)}</p>
+                    <p className="text-lg font-bold data-text text-secondary-400">{entry.sharpeRatio.toFixed(2)}</p>
                     <p className="text-[10px] text-muted-foreground">Sharpe</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 mt-4">
                   <StrategyFork
                     strategyId={`leaderboard_${entry.rank}`}
-                    strategyName={entry.strategy_name}
-                    authorName={entry.author_name}
-                    forkCount={entry.clone_count}
+                    strategyName={entry.strategy}
+                    authorName={entry.author}
+                    forkCount={entry.clones}
                     variant="button"
                   />
                   <Dialog>
@@ -98,13 +108,13 @@ export default function LeaderboardPage() {
                         <DialogTitle>Share Performance</DialogTitle>
                       </DialogHeader>
                       <ShareCard
-                        strategyName={entry.strategy_name}
-                        returnPct={entry.total_return_pct}
-                        sharpeRatio={entry.sharpe_ratio}
-                        winRate={entry.win_rate}
-                        maxDrawdown={entry.max_drawdown_pct}
+                        strategyName={entry.strategy}
+                        returnPct={entry.totalReturn}
+                        sharpeRatio={entry.sharpeRatio}
+                        winRate={entry.winRate}
+                        maxDrawdown={entry.maxDrawdown}
                         timePeriod="All Time"
-                        authorName={entry.author_name}
+                        authorName={entry.author}
                       />
                     </DialogContent>
                   </Dialog>
@@ -190,11 +200,11 @@ export default function LeaderboardPage() {
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8">
-                          <AvatarFallback className="text-[10px]">{getInitials(entry.author_name)}</AvatarFallback>
+                          <AvatarFallback className="text-[10px]">{getInitials(entry.author)}</AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="text-sm font-medium">{entry.strategy_name}</p>
-                          <p className="text-xs text-muted-foreground">{entry.author_name}</p>
+                          <p className="text-sm font-medium">{entry.strategy}</p>
+                          <p className="text-xs text-muted-foreground">{entry.author}</p>
                         </div>
                       </div>
                     </td>
@@ -202,28 +212,28 @@ export default function LeaderboardPage() {
                       <Badge variant="outline" className="text-[10px] capitalize">{entry.market}</Badge>
                     </td>
                     <td className="py-3 px-4 text-right">
-                      <span className="text-sm font-bold data-text text-accent">{formatPercent(entry.total_return_pct)}</span>
+                      <span className="text-sm font-bold data-text text-accent">{formatPercent(entry.totalReturn)}</span>
                     </td>
                     <td className="py-3 px-4 text-right">
-                      <span className="text-sm font-mono">{entry.sharpe_ratio.toFixed(2)}</span>
+                      <span className="text-sm font-mono">{entry.sharpeRatio.toFixed(2)}</span>
                     </td>
                     <td className="py-3 px-4 text-right">
-                      <span className="text-sm font-mono">{entry.win_rate}%</span>
+                      <span className="text-sm font-mono">{entry.winRate}%</span>
                     </td>
                     <td className="py-3 px-4 text-right">
-                      <span className="text-sm font-mono text-destructive">{formatPercent(entry.max_drawdown_pct)}</span>
+                      <span className="text-sm font-mono text-destructive">{formatPercent(entry.maxDrawdown)}</span>
                     </td>
                     <td className="py-3 px-4 text-right">
-                      <span className="text-sm font-mono">{entry.total_trades}</span>
+                      <span className="text-sm font-mono">{entry.trades}</span>
                     </td>
                     <td className="py-3 px-4 text-right">
-                      <span className="text-sm font-mono text-muted-foreground">{entry.clone_count}</span>
+                      <span className="text-sm font-mono text-muted-foreground">{entry.clones}</span>
                     </td>
                     <td className="py-3 px-4">
                       <StrategyFork
                         strategyId={`leaderboard_${entry.rank}`}
-                        strategyName={entry.strategy_name}
-                        authorName={entry.author_name}
+                        strategyName={entry.strategy}
+                        authorName={entry.author}
                         forkCount={0}
                         variant="button"
                       />

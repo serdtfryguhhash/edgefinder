@@ -1,5 +1,5 @@
 /**
- * EdgeFinder — AI Client powered by Anthropic Claude SDK
+ * EdgeFinder - AI Client powered by Anthropic Claude SDK
  *
  * Uses Claude claude-sonnet-4-20250514 for trading strategy analysis and market commentary.
  */
@@ -40,7 +40,7 @@ export async function chat(
     return textBlock?.text ?? "No response generated.";
   } catch (error) {
     if (error instanceof Anthropic.APIError) {
-      throw new Error(`Anthropic API error: ${error.status} — ${error.message}`);
+      throw new Error(`Anthropic API error: ${error.status} - ${error.message}`);
     }
     throw error;
   }
